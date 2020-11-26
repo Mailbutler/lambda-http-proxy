@@ -8,7 +8,7 @@ export type ResponseType = 'arraybuffer' | 'blob' | 'document' | 'json' | 'text'
 // load AWS parameters
 AWS.config.region = process.env.AWS_REGION || 'eu-central-1';
 
-var lambda = new AWS.Lambda();
+const lambda = new AWS.Lambda();
 
 export interface LambdaHTTPRequest {
   lambdaFunctionName?: string;
