@@ -4,6 +4,9 @@
   "description": "Access HTTP endpoints through a lambda proxy when direct access is restricted, e.g. when in a VPC",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
     "lib/**/*"
   ],
