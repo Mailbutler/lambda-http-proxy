@@ -56,7 +56,9 @@ export async function lambdaProxyRequest(requestConfig: LambdaHTTPRequest): Prom
 
           resolve(JSON.parse(lambdaResponse.Payload.toString()));
         } catch (error) {
-          reject(new Error(`Failed to parse response '${lambdaResponse.Payload}' from Lambda: ${error.message}`));
+          reject(
+            new Error(`Failed to parse response '${lambdaResponse.Payload}' from Lambda: ${(error as Error).message}`),
+          );
         }
       }
     });
