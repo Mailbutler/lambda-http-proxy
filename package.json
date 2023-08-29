@@ -1,6 +1,6 @@
 {
   "name": "@mailbutler/lambda-http-proxy",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Access HTTP endpoints through a lambda proxy when direct access is restricted, e.g. when in a VPC",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
