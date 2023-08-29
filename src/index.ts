@@ -1,14 +1,12 @@
-import * as AWS from 'aws-sdk';
+import { AddLayerVersionPermissionCommand, InvocationType, InvokeCommand, LambdaClient, LogType } from "@aws-sdk/client-lambda";
 
 type HTTPVerb = 'get' | 'post' | 'put' | 'patch' | 'delete' | 'head' | 'purge' | 'link' | 'unlink' | 'options';
 export type Method = HTTPVerb | `${Uppercase<HTTPVerb>}`;
 
 export type ResponseType = 'arraybuffer' | 'blob' | 'document' | 'json' | 'text' | 'stream';
 
-// load AWS parameters
-AWS.config.region = process.env.AWS_REGION || 'eu-central-1';
-
-const lambda = new AWS.Lambda();
+// a client can be shared by different commands.
+const lambdaClient = new LambdaClient({ region: process.env.AWS_REGION || 'eu-central-1' });
 
 export interface LambdaHTTPRequest {
   lambdaFunctionName?: string;
@@ -37,30 +35,16 @@ export async function lambdaProxyRequest(requestConfig: LambdaHTTPRequest): Prom
     throw new Error('No Lambda function name specified!');
   }
 
-  const lambdaParams = {
+  const command = new InvokeCommand({
     FunctionName: lambdaFunctionName,
-    InvocationType: 'RequestResponse',
-    LogType: process.env.LAMBDA_LOG_TYPE || 'Tail',
+    InvocationType: InvocationType.RequestResponse,
     Payload: JSON.stringify(requestConfig),
-  };
-
-  return new Promise<LambdaHTTPResponse>((resolve, reject) => {
-    lambda.invoke(lambdaParams, (error, lambdaResponse) => {
-      if (error) {
-        reject(error);
-      } else {
-        try {
-          if (!lambdaResponse.Payload) {
-            throw new Error('Lambda response payload is empty!');
-          }
-
-          resolve(JSON.parse(lambdaResponse.Payload.toString()));
-        } catch (error) {
-          reject(
-            new Error(`Failed to parse response '${lambdaResponse.Payload}' from Lambda: ${(error as Error).message}`),
-          );
-        }
-      }
-    });
+    LogType: process.env.LAMBDA_LOG_TYPE || LogType.Tail,
   });
+  const lambdaResponse = await lambdaClient.send(command)
+  if (!lambdaResponse.Payload) {
+    throw new Error('Lambda response payload is empty!');
+  }
+
+  return JSON.parse(lambdaResponse.Payload.toString())
 }
