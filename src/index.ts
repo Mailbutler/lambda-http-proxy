@@ -1,4 +1,4 @@
-import { AddLayerVersionPermissionCommand, InvocationType, InvokeCommand, LambdaClient, LogType } from "@aws-sdk/client-lambda";
+import { InvocationType, InvokeCommand, LambdaClient, LogType } from "@aws-sdk/client-lambda";
 
 type HTTPVerb = 'get' | 'post' | 'put' | 'patch' | 'delete' | 'head' | 'purge' | 'link' | 'unlink' | 'options';
 export type Method = HTTPVerb | `${Uppercase<HTTPVerb>}`;
