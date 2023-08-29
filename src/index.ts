@@ -1,4 +1,4 @@
-import { InvocationType, InvokeCommand, LambdaClient, LogType } from "@aws-sdk/client-lambda";
+import { InvocationType, InvokeCommand, LambdaClient, LogType } from '@aws-sdk/client-lambda';
 
 type HTTPVerb = 'get' | 'post' | 'put' | 'patch' | 'delete' | 'head' | 'purge' | 'link' | 'unlink' | 'options';
 export type Method = HTTPVerb | `${Uppercase<HTTPVerb>}`;
@@ -41,10 +41,11 @@ export async function lambdaProxyRequest(requestConfig: LambdaHTTPRequest): Prom
     Payload: JSON.stringify(requestConfig),
     LogType: process.env.LAMBDA_LOG_TYPE || LogType.Tail,
   });
-  const lambdaResponse = await lambdaClient.send(command)
+  const lambdaResponse = await lambdaClient.send(command);
   if (!lambdaResponse.Payload) {
     throw new Error('Lambda response payload is empty!');
   }
 
-  return JSON.parse(lambdaResponse.Payload.toString())
+  const jsonResponseString = new TextDecoder().decode(lambdaResponse.Payload);
+  return JSON.parse(jsonResponseString);
 }
