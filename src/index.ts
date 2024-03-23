@@ -39,7 +39,7 @@ export async function lambdaProxyRequest(requestConfig: LambdaHTTPRequest): Prom
     FunctionName: lambdaFunctionName,
     InvocationType: InvocationType.RequestResponse,
     Payload: JSON.stringify(requestConfig),
-    LogType: process.env.LAMBDA_LOG_TYPE || LogType.Tail,
+    LogType: (process.env.LAMBDA_LOG_TYPE as LogType) || LogType.Tail,
   });
   const lambdaResponse = await lambdaClient.send(command);
   if (!lambdaResponse.Payload) {

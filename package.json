@@ -42,7 +42,7 @@
     "typescript": "^5.2.2"
   },
   "optionalDependencies": {
-    "@aws-sdk/client-lambda": "3.398.0"
+    "@aws-sdk/client-lambda": "3.540.0"
   },
   "engines": {
     "npm": ">=9.0.0",
