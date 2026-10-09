@@ -12,7 +12,7 @@ This module provides a simple abstraction to send HTTP requests through a separa
 ## Installation
 
 ```sh
-npm install lambda-http-proxy --save
+npm install @mailbutler/lambda-http-proxy
 ```
 
 ## AWS Requirements
@@ -24,12 +24,24 @@ To perform HTTP requests from within a VPC without paying for more networking re
 The Lambda proxy function simply performs the actual request via Axios (with the given configuration parameter) and returns the response object back to the caller of the Lambda proxy function:
 
 ```js
-const axios = require('axios');
+import axios from 'axios';
 
-exports.handler = function (event, context) {
-  axios(event).then((response) => context.succeed(response));
-};
+export async function handler(event) {
+  const { lambdaFunctionName, dataEncoding, ...config } = event;
+  if (dataEncoding === 'base64') {
+    config.data = Buffer.from(config.data, 'base64');
+  }
+  const { status, data, headers } = await axios(config);
+  return { status, data, headers };
+}
 ```
+
+### Binary request bodies
+
+The invocation payload is JSON. Binary `data` (`Buffer`, `Uint8Array`, `ArrayBuffer`, e.g. a gzipped
+body sent with `content-encoding: gzip`) is therefore sent base64 encoded together with
+`dataEncoding: 'base64'` (since 1.2.0). The proxy function must decode it as shown above; otherwise
+the base64 text would be sent as body. Strings and objects are sent unchanged.
 
 ### VPC Endpoint
 
@@ -57,6 +69,8 @@ const httpResponse = await lambdaProxyRequest(requestConfig);
 
 ## Release History
 
+- 1.2
+  - Binary request bodies are sent base64 encoded with `dataEncoding: 'base64'`
 - 1.0
   - Initial version
 
