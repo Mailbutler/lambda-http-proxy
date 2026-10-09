@@ -16,7 +16,13 @@ export interface LambdaHTTPRequest {
   method?: Method;
   headers?: any;
   params?: any;
+  /**
+   * Request body. Binary data (Buffer, Uint8Array, ArrayBuffer) is sent base64 encoded with
+   * `dataEncoding: 'base64'` and forwarded as the original bytes by the proxy function.
+   */
   data?: any;
+  /** Set automatically for binary `data`; requires lambda-http-proxy-function with SEC-223. */
+  dataEncoding?: 'base64';
   timeout?: number;
   responseType?: ResponseType;
 }
@@ -38,7 +44,7 @@ export async function lambdaProxyRequest(requestConfig: LambdaHTTPRequest): Prom
   const command = new InvokeCommand({
     FunctionName: lambdaFunctionName,
     InvocationType: InvocationType.RequestResponse,
-    Payload: JSON.stringify(requestConfig),
+    Payload: serializeRequest(requestConfig),
     LogType: (process.env.LAMBDA_LOG_TYPE as LogType) || LogType.Tail,
   });
   const lambdaResponse = await lambdaClient.send(command);
@@ -48,4 +54,18 @@ export async function lambdaProxyRequest(requestConfig: LambdaHTTPRequest): Prom
 
   const jsonResponseString = new TextDecoder().decode(lambdaResponse.Payload);
   return JSON.parse(jsonResponseString);
+}
+
+/**
+ * Serializes the request config as invocation payload (JSON). Binary data would not survive
+ * JSON (Buffer -> {type, data}, Uint8Array -> object), so it is base64 encoded and flagged.
+ */
+export function serializeRequest(requestConfig: LambdaHTTPRequest): string {
+  const { data } = requestConfig;
+  if (data instanceof ArrayBuffer || ArrayBuffer.isView(data)) {
+    const bytes =
+      data instanceof ArrayBuffer ? Buffer.from(data) : Buffer.from(data.buffer, data.byteOffset, data.byteLength);
+    return JSON.stringify({ ...requestConfig, data: bytes.toString('base64'), dataEncoding: 'base64' });
+  }
+  return JSON.stringify(requestConfig);
 }
